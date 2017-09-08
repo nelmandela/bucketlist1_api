@@ -15,8 +15,8 @@ class User(db.Model):
     username = db.Column(db.String, nullable=False)
     email = db.Column(db.String, nullable=False)
     password_hash = db.Column(db.String(128))
-    buckelists = db.relationship('Bucketlists', backref='users',
-                                cascade='all, delete')
+    # buckelists = db.relationship('Bucketlist', backref='users',
+    #                             cascade='all, delete')
 
     @property
     def password(self):
@@ -53,7 +53,7 @@ class Bucketlist(db.Model):
     name = db.Column(db.String, nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_on = db.Column(db.DateTime, default=datetime.now())
-    items = db.relationship('Items', backref='bucketlists',
+    items = db.relationship('Item', backref='bucketlists',
                             cascade='all, delete')
 
     def save(self):
@@ -77,9 +77,8 @@ class Item(db.Model):
     name = db.Column(db.String, nullable=False)
     bucketlist_id = db.Column(db.Integer, db.ForeignKey('bucketlists.id'))
     created_on = db.Column(db.DateTime, default=datetime.now)
-    bucketlist = db.relationship('Bucketlist', backref='items',
-                            cascade='all, delete')
-
+    
+    
     def save(self):
         """Save item object."""
         db.session.add(self)
