@@ -15,8 +15,14 @@ class User(db.Model):
     username = db.Column(db.String, nullable=False)
     email = db.Column(db.String, nullable=False)
     password_hash = db.Column(db.String(128))
-    # buckelists = db.relationship('Bucketlist', backref='users',
-    #                             cascade='all, delete')
+    buckelists = db.relationship('Bucketlists', backref='users',
+                                cascade='all, delete')
+
+
+    def __init__(self, username, email, password):
+        self.username = username
+        self.email = email
+        self.password = password
 
     @property
     def password(self):
@@ -24,7 +30,7 @@ class User(db.Model):
         Prevent pasword from being accessed
         """
         raise AttributeError('password is not a readable attribute.')
-
+        
     @password.setter
     def password(self, password):
         """
@@ -40,12 +46,14 @@ class User(db.Model):
 
     def __repr__(self):
         return '<User: {}>'.format(self.username)
+
     def save(self):
         """Define """
+        print(self)
         db.session.add(self)
-        db.session.commit
+        db.session.commit()
 
-class Bucketlist(db.Model):
+class Bucketlists(db.Model):
     """Define buckelist properties."""
     __tablename__ = "bucketlists"
 
@@ -67,7 +75,7 @@ class Bucketlist(db.Model):
         db.session.commit
 
     def __repr__(self):
-            return '<Bucketlist: {}>'.format(self.name)
+            return '<Bucketlists: {}>'.format(self.name)
 
 class Item(db.Model):
     """Define item properties."""

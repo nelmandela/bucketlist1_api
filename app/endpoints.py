@@ -1,10 +1,11 @@
 from flask import Blueprint
 from flask_restful import Api
 
-from app.views import Register
+from app.views import Register, Login
 
-bluePrint = Blueprint('buck_api', __name__)
+blue_print = Blueprint('bucket_api', __name__)
 
-buck_api = Api(bluePrint)
+bucket_api = Api(blue_print)
 
-buck_api.add_resource(Register, '/api/v1/register')
+bucket_api.add_resource(Register, '/api/v1/auth/register')
+bucket_api.add_resource(Login, '/api/v1/auth/login')
