@@ -5,8 +5,9 @@ from flask import jsonify
 from app import create_app
 
 # create app instance
-app = create_app(os.environ.get('FLASK_CONFIG'))
+# app = create_app(os.environ.get('FLASK_CONFIG'))
 
+app = create_app('development')
 # basic test route
 @app.route('/users', methods=['GET'])
 def get_users():

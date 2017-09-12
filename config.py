@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 
+
+
+
 class Config(object):
     """Production configurations."""
 
@@ -18,9 +21,9 @@ class Development(Config):
     """Development configurations."""
     DEBUG = True
     SQLALCHEMY_ECHO = True
-    SQLALCHEMY_DATABASE_URI = "sqlite:///" + Config.BASE_DIR \
-                              + "/bucketlist-dev.sqlite"
+    SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")
     SQLALCHEMY_TRACK_MODIFICATIONS = True
+    SECRET_KEY = os.environ.get('SECRET_KEY')
 
 class Testing(Config):
     """Testing configurations."""

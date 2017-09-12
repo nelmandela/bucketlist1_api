@@ -49,7 +49,6 @@ class User(db.Model):
 
     def save(self):
         """Define """
-        print(self)
         db.session.add(self)
         db.session.commit()
 
@@ -67,12 +66,12 @@ class Bucketlists(db.Model):
     def save(self):
         """Save bucketlist object"""
         db.session.add(self)
-        db.session.commit
+        db.session.commit()
         
     def delete(self):
         """Delete bucketlist object"""
         db.session.delete(self)
-        db.session.commit
+        db.session.commit()
 
     def __repr__(self):
             return '<Bucketlists: {}>'.format(self.name)
@@ -90,12 +89,13 @@ class Item(db.Model):
     def save(self):
         """Save item object."""
         db.session.add(self)
-        db.session.commit
+        db.session.commit()
 
     def delete(self):
         """Delete item object """
         db.session.delete(self)
-        db.session.commit
+        db.session.commit()
 
     def __repr__(self):
             return '<Item: {}>'.format(self.name)
+
