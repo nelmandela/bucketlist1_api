@@ -2,3 +2,4 @@
 *__pycache__
 migrations/
 bucketlist-dev.sqlite
+*.DS_store

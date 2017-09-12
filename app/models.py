@@ -18,13 +18,19 @@ class User(db.Model):
     buckelists = db.relationship('Bucketlists', backref='users',
                                 cascade='all, delete')
 
+
+    def __init__(self, username, email, password):
+        self.username = username
+        self.email = email
+        self.password = password
+
     @property
     def password(self):
         """
         Prevent pasword from being accessed
         """
         raise AttributeError('password is not a readable attribute.')
-
+        
     @password.setter
     def password(self, password):
         """
@@ -40,12 +46,14 @@ class User(db.Model):
 
     def __repr__(self):
         return '<User: {}>'.format(self.username)
+
     def save(self):
         """Define """
+        print(self)
         db.session.add(self)
-        db.session.commit
+        db.session.commit()
 
-class Bucketlist(db.Model):
+class Bucketlists(db.Model):
     """Define buckelist properties."""
     __tablename__ = "bucketlists"
 
@@ -53,7 +61,7 @@ class Bucketlist(db.Model):
     name = db.Column(db.String, nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_on = db.Column(db.DateTime, default=datetime.now())
-    items = db.relationship('Items', backref='bucketlists',
+    items = db.relationship('Item', backref='bucketlists',
                             cascade='all, delete')
 
     def save(self):
@@ -67,7 +75,7 @@ class Bucketlist(db.Model):
         db.session.commit
 
     def __repr__(self):
-            return '<Bucketlist: {}>'.format(self.name)
+            return '<Bucketlists: {}>'.format(self.name)
 
 class Item(db.Model):
     """Define item properties."""
@@ -77,9 +85,8 @@ class Item(db.Model):
     name = db.Column(db.String, nullable=False)
     bucketlist_id = db.Column(db.Integer, db.ForeignKey('bucketlists.id'))
     created_on = db.Column(db.DateTime, default=datetime.now)
-    bucketlist = db.relationship('Bucketlist', backref='items',
-                            cascade='all, delete')
-
+    
+    
     def save(self):
         """Save item object."""
         db.session.add(self)
