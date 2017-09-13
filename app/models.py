@@ -48,7 +48,7 @@ class User(db.Model):
         return '<User: {}>'.format(self.username)
 
     def save(self):
-        """Define """
+        """Save user object """
         db.session.add(self)
         db.session.commit()
 
