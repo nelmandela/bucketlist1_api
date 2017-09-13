@@ -311,3 +311,21 @@ class Items(Resource):
                 "message": "Item not found"
             }
         return (response), 404
+
+    @jwt_required
+    def delete(self, id, item_id):
+        """To delete an item"""
+        item = Item.query.filter_by(id=item_id, bucketlist_id=id).first()
+        try:
+            db.session.delete(item)
+            db.session.commit()
+
+            response = {
+                    "status": "success",
+                    "messege": "Item deleted"
+                }
+
+            return (response), 200
+
+        except Exception as error:
+            return ({"error": "Item not found"}, 404)
