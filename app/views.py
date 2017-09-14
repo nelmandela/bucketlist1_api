@@ -8,17 +8,15 @@ from app.models import User, Bucketlists, Item
 from app import db
 
 
-
-
-
 class Register(Resource):
     """Register a user"""
+
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('username', type=str,
                                    required=True, help='Username required')
         self.reqparse.add_argument('email', type=str,
-                                   required=True, help='Email required')                          
+                                   required=True, help='Email required')
         self.reqparse.add_argument('password', type=str,
                                    required=True, help='Password required')
 
@@ -27,7 +25,7 @@ class Register(Resource):
 
         if len(args['username']) == 0:
             response = {
-                "status" : "fail",
+                "status": "fail",
                 "message": "Provide a username"
             }
 
@@ -50,21 +48,22 @@ class Register(Resource):
             return (response), 400
 
         if User.query.filter_by(username=args['username']).first():
-            #to check if user with the given username exists
+            # to check if user with the given username exists
             response = {
                 "status": "fail",
                 "messege": "Username already exists"
             }
             return (response), 409
         if User.query.filter_by(email=args['email']).first():
-            #to check if user with the given username exists
+            # to check if user with the given username exists
             response = {
                 "status": "fail",
                 "messege": "Email already exists"
             }
             return (response), 409
 
-        new_user = User(username=args['username'], email=args['email'], password=args['password'])
+        new_user = User(
+            username=args['username'], email=args['email'], password=args['password'])
         new_user.save()
 
         response = {
@@ -77,6 +76,7 @@ class Register(Resource):
 
 class Login(Resource):
     """User sign in."""
+
     def __init__(self):
         """To add login endpoint arguments."""
         self.reqparse = reqparse.RequestParser()
@@ -94,28 +94,31 @@ class Login(Resource):
         else:
             user = User.query.filter_by(username=args['username']).first()
             if user:
-                expiration_time = timedelta(hours=3)
+                expiration_time = timedelta(hours=24)
                 token = create_access_token(identity=username,
-                                    expires_delta=expiration_time)
+                                            expires_delta=expiration_time)
 
                 return {"Authorization": token}, 200
             else:
                 return {"msg": "invalid username password combination"}, 401
 
+
 class Bucketlist(Resource):
     """Adds CRUD functionality"""
+
     def __init__(self):
         """To initialize bucketlists endpoint arguments."""
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('name', type=str,
                                    help='name required', required=True)
+
     @jwt_required
     def post(self):
         args = self.reqparse.parse_args()
         name = args["name"]
         if not name:
             response = {
-                "status" : "fail",
+                "status": "fail",
                 "message": "Provide a bucketlist name"
             }
 
@@ -146,12 +149,23 @@ class Bucketlist(Resource):
 
     @jwt_required
     def get(self):
+        # get page,limit & search
+        page = int(request.args.get('page'))
+        limit = int(request.args.get('limit'))
+        search = request.args.get('q')
         bucket_data = []
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
-        bucketlist = Bucketlists.query.filter_by(created_by=user.id)
-        if bucketlist:
-            for bucket in bucketlist:
+        bucketlist_paginate = None
+        if search:
+            bucketlist_paginate = Bucketlists.query.filter(
+                Bucketlists.created_by == user.id, Bucketlists.name.like(search + "%")).paginate(page=page, per_page=limit)
+        else:
+            bucketlist_paginate = Bucketlists.query.filter(
+                Bucketlists.created_by == user.id).paginate(page=page, per_page=limit)
+
+        if bucketlist_paginate:
+            for bucket in bucketlist_paginate.items:
                 bucket = {
                     "bucketlistId": bucket.id,
                     "name": bucket.name,
@@ -177,7 +191,7 @@ class Bucketlist(Resource):
         name = args["name"]
         if not name:
             response = {
-                "status" : "fail",
+                "status": "fail",
                 "message": "Provide a bucketlist name"
             }
 
@@ -223,6 +237,7 @@ class Bucketlist(Resource):
 
 class Items(Resource):
     """Adds CRUD functionality"""
+
     def __init__(self):
         """To initialize items endpoint arguments."""
         self.reqparse = reqparse.RequestParser()
@@ -235,7 +250,7 @@ class Items(Resource):
         name = args["name"]
         if not name:
             response = {
-                "status" : "fail",
+                "status": "fail",
                 "message": "Provide an item name"
             }
 
@@ -260,30 +275,39 @@ class Items(Resource):
 
     @jwt_required
     def get(self, id):
+        """fetch items,get page,limit & search"""
+        limit = int(request.args.get('limit'))
+        page = int(request.args.get('page'))
+        print(request)
+        search = request.args.get('q')        
         item_data = []
         #username = get_jwt_identity()
         #user = User.query.filter_by(username=username).first()
         item = Item.query.filter_by(bucketlist_id=id).all()
+        item_paginate = None
+        if search:
+            item_paginate = Item.query.filter(
+                Item.bucketlist_id == id, Item.name.like(search + "%")).paginate(page=page, per_page=limit)
+        else:
+            item_paginate = Item.query.filter(
+                Item.bucketlist_id == id).paginate(page=page, per_page=limit)
+        if item_paginate:
+            for items in item_paginate.items:
+                item_dict = {}
+                item_dict['id'] = items.id
+                item_dict['name'] = items.name
+                item_dict['created_on'] = str(items.created_on)
+                item_data.append(item_dict)
 
-        for items in item:
-            item_dict = {}
-            item_dict['id'] = items.id
-            item_dict['name'] = items.name
-            item_dict['created_on'] = str(items.created_on)
-            item_data.append(item_dict)
-
-        return (item_data), 200
+            return (item_data), 200
 
     @jwt_required
     def put(self, id, item_id):
         args = self.reqparse.parse_args()
-        print("request.args >>>>>>>>")
-        print(id, item_id)
         name = args["name"]
-
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
-        bucket = Bucketlists.query.filter_by(id=id,created_by=user.id).first()
+        bucket = Bucketlists.query.filter_by(id=id, created_by=user.id).first()
         if not bucket:
             response = {
                 "status": "fail",
@@ -307,9 +331,9 @@ class Items(Resource):
             return (response), 200
 
         response = {
-                "status": "fail",
-                "message": "Item not found"
-            }
+            "status": "fail",
+            "message": "Item not found"
+        }
         return (response), 404
 
     @jwt_required
@@ -321,9 +345,9 @@ class Items(Resource):
             db.session.commit()
 
             response = {
-                    "status": "success",
-                    "messege": "Item deleted"
-                }
+                "status": "success",
+                "messege": "Item deleted"
+            }
 
             return (response), 200
 
