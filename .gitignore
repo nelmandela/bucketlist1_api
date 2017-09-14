@@ -4,3 +4,4 @@ migrations/
 bucketlist-dev.sqlite
 *.DS_store
 *.pyc
+*.cache
