@@ -30,6 +30,7 @@ class Testing(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///" + Config.BASE_DIR \
                               + "/tests/test_db.sqlite"
+    SECRET_KEY = os.environ.get('SECRET_KEY')
 
 app_configuration = {
     'production': Config,
