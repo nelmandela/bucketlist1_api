@@ -74,22 +74,16 @@ class ItemlistTestCase(BaseTestCase):
         new_item = {
                             "name": "Hiking"
                         }
-        response = self.client.put('/api/v1/bucketlists/1/items/1', data=new_item,
-                                    headers=self.headers_2)
-        self.assertEqual(response.status_code, 404)
-        response_msg = json.loads(response.data.decode('utf8'))
-        self.assertIn(response_msg['message'],"Bucketlist not found")
+        response = self.client.put('/api/v1/bucketlists/1/items/1', data=new_item)
+        self.assertEqual(response.status_code, 401)
 
     def test_update_items_with_same_name(self):
         """Test if endpoint updates item with same name"""
-        new_item = {
-                            "name": "CapeTown"
-                        }
-        response = self.client.put('/api/v1/bucketlists/1/items/1', data=new_item,
+        response = self.client.put('/api/v1/bucketlists/1/items/1', data=self.item2,
                                     headers=self.headers)
         self.assertEqual(response.status_code, 409)
         response_msg = json.loads(response.data.decode('utf8'))
-        self.assertIn(response_msg['message'],"Pro1 a username")
+        self.assertIn(response_msg['message'],"Cannot update item with the same name.")
 
     def test_update_empty_items(self):
         """Test if endpoint updates an empty item"""
@@ -108,13 +102,6 @@ class ItemlistTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         response_msg = json.loads(response.data.decode('utf8'))
         self.assertIn(response_msg['message'],"Item deleted")    
-
-    # def test_delete_items_invalid_token(self):
-    #     """Test that endpoints deletes items"""
-    #     response = self.client.delete('/api/v1/bucketlists/1/items/1',headers=self.headers_2)
-    #     self.assertEqual(response.status_code, 404)
-    #     response_msg = json.loads(response.data.decode('utf8'))
-    #     self.assertIn(response_msg['message'],"Bucketlist not found")
 
     def test_delete_empty_items(self):
         """Test if endpoints deletes items"""

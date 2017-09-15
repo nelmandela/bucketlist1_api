@@ -5,3 +5,5 @@ bucketlist-dev.sqlite
 *.DS_store
 *.pyc
 *.cache
+.coverage
+tests/test_db.sqlite

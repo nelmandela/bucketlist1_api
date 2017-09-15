@@ -64,7 +64,7 @@ class BaseTestCase(unittest.TestCase):
 
         # token for user 2
         self.token_2 = (self.response_data_in_json_format_2['Authorization'])
-        self.headers_2 = {'Authorization': 'Bearer ' + self.token_2}
+        self.headers_2 = {'Authorization': 'Bearer ' + "fkanlnalsdklnasnlnsndnaslk"}
 
     def tearDown(self):
         db.session.remove()

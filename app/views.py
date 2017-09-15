@@ -238,6 +238,13 @@ class Bucketlist(Resource):
             try:
                 db.session.delete(bucket)
                 db.session.commit()
+                
+                response = {
+                    "status": "success",
+                    "message": "Item deleted"
+                }
+
+                return (response), 200
             except Exception as error:
                 return ({"error": "Bucketlist not found"}, 404)
 
@@ -330,6 +337,13 @@ class Items(Resource):
 
             return (response), 400
         if item:
+            # compare new name with existing one
+            if name == item.name:
+                response = {
+                    "status": "fail",
+                    "message": "Cannot update item with the same name."
+                }
+                return (response), 409
             item.name = name
             item.save()
             response = {
