@@ -20,6 +20,8 @@ class Register(Resource):
         self.reqparse.add_argument('password', type=str,
                                    required=True, help='Password required')
 
+        print ("\n------- WE ARE HERE-----")
+
     def post(self):
         args = self.reqparse.parse_args()
 
