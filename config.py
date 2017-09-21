@@ -14,9 +14,9 @@ class Development(Config):
     """Development configurations."""
     DEBUG = True
     SQLALCHEMY_ECHO = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")
+    SQLALCHEMY_DATABASE_URI =  os.environ.get("SQL_ALCHEMY_DATABASE_URI") or "postgresql://localhost/bucketlist"
     SQLALCHEMY_TRACK_MODIFICATIONS = True
-    SECRET_KEY = os.environ.get('SECRET_KEY')
+    SECRET_KEY = os.environ.get("SECRET_KEY") or 'jvhdfbiufhoiundojincacsbycnssncjcsbjdsjndc34n35k36'
 
 class Testing(Config):
     """Testing configurations."""
