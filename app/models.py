@@ -60,6 +60,7 @@ class Bucketlists(db.Model):
     name = db.Column(db.String, nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_on = db.Column(db.DateTime, default=datetime.now())
+    updated_on = db.Column(db.DateTime, default=datetime.now())
     items = db.relationship('Item', backref='bucketlists',
                             cascade='all, delete')
 
@@ -84,8 +85,9 @@ class Item(db.Model):
     name = db.Column(db.String, nullable=False)
     bucketlist_id = db.Column(db.Integer, db.ForeignKey('bucketlists.id'))
     created_on = db.Column(db.DateTime, default=datetime.now)
+    updated_on = db.Column(db.DateTime, default=datetime.now())
     
-    
+  
     def save(self):
         """Save item object."""
         db.session.add(self)
