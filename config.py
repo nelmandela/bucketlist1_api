@@ -10,13 +10,15 @@ class Config(object):
     SQLALCHEMY_ECHO = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+
 class Development(Config):
     """Development configurations."""
     DEBUG = True
     SQLALCHEMY_ECHO = True
-    SQLALCHEMY_DATABASE_URI =  os.environ.get("SQL_ALCHEMY_DATABASE_URI") or "postgresql://localhost/bucketlist"
+    SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")
     SQLALCHEMY_TRACK_MODIFICATIONS = True
-    SECRET_KEY = os.environ.get("SECRET_KEY") or 'jvhdfbiufhoiundojincacsbycnssncjcsbjdsjndc34n35k36'
+    SECRET_KEY = os.environ.get("SECRET_KEY")
+
 
 class Testing(Config):
     """Testing configurations."""
@@ -24,6 +26,7 @@ class Testing(Config):
     SQLALCHEMY_DATABASE_URI = "sqlite:///" + Config.BASE_DIR \
                               + "/tests/test_db.sqlite"
     SECRET_KEY = os.environ.get('SECRET_KEY')
+
 
 app_configuration = {
     'production': Config,
