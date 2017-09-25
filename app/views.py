@@ -144,7 +144,7 @@ class Bucketlist(Resource):
         return (response), 201
 
     @jwt_required
-    def get(self):
+    def get(self, **kwargs):
         # get page,limit & search
         page = request.args.get('page')
         limit = request.args.get('limit')
@@ -152,6 +152,7 @@ class Bucketlist(Resource):
         bucket_data = []
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
+
         bucketlist_paginate = None
         if search:
             bucketlist_paginate = Bucketlists.query.filter(
