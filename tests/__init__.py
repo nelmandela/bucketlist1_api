@@ -33,7 +33,8 @@ class BaseTestCase(unittest.TestCase):
                                  "password" : "password123"
                                 }
         self.bucketlist = {
-                            "name" : "travel"
+                            "name" : "travel",
+                            "description": "test description"
                           }
         self.item = {
                             "name" : "CapeTown"

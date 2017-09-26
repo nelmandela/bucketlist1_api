@@ -113,6 +113,7 @@ class Bucketlist(Resource):
     def post(self):
         args = self.reqparse.parse_args()
         name = args["name"]
+        description = args["description"]
         if not name:
             response = {
                 "status": "fail",
@@ -134,7 +135,8 @@ class Bucketlist(Resource):
             return (response), 409
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
-        new_bucketlist = Bucketlists(name=args["name"], created_by=user.id)
+        new_bucketlist = Bucketlists(
+            name=args["name"], description=args["description"], created_by=user.id)
         new_bucketlist.save()
 
         response = {
