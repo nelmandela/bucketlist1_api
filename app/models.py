@@ -16,8 +16,7 @@ class User(db.Model):
     email = db.Column(db.String, nullable=False)
     password_hash = db.Column(db.String(128))
     buckelists = db.relationship('Bucketlists', backref='users',
-                                cascade='all, delete')
-
+                                 cascade='all, delete')
 
     def __init__(self, username, email, password):
         self.username = username
@@ -30,7 +29,7 @@ class User(db.Model):
         Prevent pasword from being accessed
         """
         raise AttributeError('password is not a readable attribute.')
-        
+
     @password.setter
     def password(self, password):
         """
@@ -52,12 +51,14 @@ class User(db.Model):
         db.session.add(self)
         db.session.commit()
 
+
 class Bucketlists(db.Model):
     """Define buckelist properties."""
     __tablename__ = "bucketlists"
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
+    description = db.Column(db.String, default="test", nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_on = db.Column(db.DateTime, default=datetime.now())
     updated_on = db.Column(db.DateTime, default=datetime.now())
@@ -68,14 +69,15 @@ class Bucketlists(db.Model):
         """Save bucketlist object"""
         db.session.add(self)
         db.session.commit()
-        
+
     def delete(self):
         """Delete bucketlist object"""
         db.session.delete(self)
         db.session.commit()
 
     def __repr__(self):
-            return '<Bucketlists: {}>'.format(self.name)
+        return '<Bucketlists: {}>'.format(self.name)
+
 
 class Item(db.Model):
     """Define item properties."""
@@ -86,8 +88,7 @@ class Item(db.Model):
     bucketlist_id = db.Column(db.Integer, db.ForeignKey('bucketlists.id'))
     created_on = db.Column(db.DateTime, default=datetime.now)
     updated_on = db.Column(db.DateTime, default=datetime.now())
-    
-  
+
     def save(self):
         """Save item object."""
         db.session.add(self)
@@ -99,5 +100,4 @@ class Item(db.Model):
         db.session.commit()
 
     def __repr__(self):
-            return '<Item: {}>'.format(self.name)
-
+        return '<Item: {}>'.format(self.name)
