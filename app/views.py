@@ -20,8 +20,6 @@ class Register(Resource):
         self.reqparse.add_argument('password', type=str,
                                    required=True, help='Password required')
 
-        print ("\n------- WE ARE HERE-----")
-
     def post(self):
         args = self.reqparse.parse_args()
 
@@ -92,8 +90,8 @@ class Login(Resource):
                 token = create_access_token(identity=username,
                                             expires_delta=expiration_time)
 
-                return {"status" : "success",
-                        "message" : "Log in Successful",
+                return {"status": "success",
+                        "message": "Log in Successful",
                         "Authorization": token}, 200
             else:
                 return {"message": "invalid username password combination"}, 401
@@ -107,6 +105,9 @@ class Bucketlist(Resource):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('name', type=str,
                                    help='name required', required=True)
+        self.reqparse.add_argument('description',
+                                   type=str,
+                                   help='description required', required=True)
 
     @jwt_required
     def post(self):
@@ -146,8 +147,16 @@ class Bucketlist(Resource):
     @jwt_required
     def get(self, **kwargs):
         # get page,limit & search
+
         page = request.args.get('page')
         limit = request.args.get('limit')
+
+        if page is None:
+            page = 1
+
+        if limit is None:
+            limit = 5
+
         search = request.args.get('q')
         bucket_data = []
         username = get_jwt_identity()
@@ -156,19 +165,36 @@ class Bucketlist(Resource):
         bucketlist_paginate = None
         if search:
             bucketlist_paginate = Bucketlists.query.filter(
-                Bucketlists.created_by == user.id, Bucketlists.name.like(search + "%")).paginate(page=int(page), per_page=limit)
+                Bucketlists.created_by == user.id, Bucketlists.name.like("%" + search + "%")).paginate(page=int(page), per_page=int(limit))
         else:
-            bucketlist_paginate = Bucketlists.query.filter(
-                Bucketlists.created_by == user.id).paginate(page=page, per_page=limit)
+
+            if kwargs.get('id') is None:
+                bucketlist_paginate = Bucketlists.query.filter(
+                    Bucketlists.created_by == user.id).paginate(page=int(page), per_page=int(limit))
+
+            else:
+                bucketlist_paginate = Bucketlists.query.filter(
+                    Bucketlists.created_by == user.id,
+                    Bucketlists.id == int(kwargs['id'])).paginate(page=int(page), per_page=int(limit))
 
         if bucketlist_paginate:
+            item_list = []
             for bucket in bucketlist_paginate.items:
+
+                if bucket.items:
+                    for item in bucket.items:
+                        item_list.append({"name": item.name})
+                else:
+                    item_list = []
+
                 bucket = {
                     "bucketlistId": bucket.id,
                     "name": bucket.name,
-                    "created_on": str(bucket.created_on)
+                    "created_on": str(bucket.created_on),
+                    "items": item_list
                 }
                 bucket_data.append(bucket)
+                item_list = []
 
             response = {
                 "status": "success",
@@ -241,7 +267,7 @@ class Bucketlist(Resource):
             try:
                 db.session.delete(bucket)
                 db.session.commit()
-                
+
                 response = {
                     "status": "success",
                     "message": "Item deleted"
@@ -296,10 +322,8 @@ class Items(Resource):
         limit = request.args.get('limit')
         page = request.args.get('page')
         print(request)
-        search = request.args.get('q')        
+        search = request.args.get('q')
         item_data = []
-        #username = get_jwt_identity()
-        #user = User.query.filter_by(username=username).first()
         item = Item.query.filter_by(bucketlist_id=id).all()
         item_paginate = None
         if search:
