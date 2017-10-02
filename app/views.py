@@ -39,18 +39,26 @@ class Register(Resource):
 
             return (response), 400
 
+        elif not (args['username']).isalpha():
+            response = {
+                "status": "fail",
+                "messege": "Username should not have special characters"
+            }
+
+            return (response), 400
+
         if User.query.filter_by(username=args['username']).first():
             # to check if user with the given username exists
             response = {
                 "status": "fail",
-                "message": "Username already exists"
+                "messege": "Username already exists"
             }
             return (response), 409
         if User.query.filter_by(email=args['email']).first():
             # to check if user with the given username exists
             response = {
                 "status": "fail",
-                "message": "Email already exists"
+                "messege": "Email already exists"
             }
             return (response), 409
 
@@ -60,10 +68,10 @@ class Register(Resource):
 
         response = {
             "status": "success",
-            "message": "User Registered"
+            "messege": "User Registered"
         }
 
-        return (response), 201
+        return (response), 200
 
 
 class Login(Resource):
@@ -81,20 +89,24 @@ class Login(Resource):
         args = self.reqparse.parse_args()
         username = args["username"]
         password = args["password"]
+
+        print(args['username'], args["password"])
         if not username or not password:
             return {'status': 'fail', 'message': 'username and password requied for login.'}, 400
         else:
-            user = User.query.filter_by(username=args['username']).first()
+            user = User.query.filter_by(username=username).first()
+            print(user.__dict__)
             if user:
                 expiration_time = timedelta(hours=24)
                 token = create_access_token(identity=username,
                                             expires_delta=expiration_time)
 
-                return {"status": "success",
-                        "message": "Log in Successful",
-                        "Authorization": token}, 200
+                return {
+                        "Authorization": token,
+                        "status": "success"
+                       }, 200
             else:
-                return {"message": "invalid username password combination"}, 401
+                return {"msg": "invalid username password combination"}, 401
 
 
 class Bucketlist(Resource):
@@ -105,15 +117,11 @@ class Bucketlist(Resource):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('name', type=str,
                                    help='name required', required=True)
-        self.reqparse.add_argument('description',
-                                   type=str,
-                                   help='description required', required=True)
 
     @jwt_required
     def post(self):
         args = self.reqparse.parse_args()
         name = args["name"]
-        description = args["description"]
         if not name:
             response = {
                 "status": "fail",
@@ -124,86 +132,57 @@ class Bucketlist(Resource):
         elif not name.isalpha():
             response = {
                 "status": "fail",
-                "message": "Name should not have special characters"
+                "messege": "Name should not have special characters"
             }
             return (response), 400
         if Bucketlists.query.filter_by(name=name).first():
             response = {
                 "status": "fail",
-                "message": "Bucketlist already exists"
+                "messege": "Bucketlist already exists"
             }
             return (response), 409
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
-        new_bucketlist = Bucketlists(
-            name=args["name"], description=args["description"], created_by=user.id)
+        new_bucketlist = Bucketlists(name=args["name"], created_by=user.id)
         new_bucketlist.save()
 
         response = {
             "status": "success",
-            "message": "Bucketlist created"
+            "messege": "Bucketlist created"
         }
 
-        return (response), 201
+        return (response), 200
 
     @jwt_required
-    def get(self, **kwargs):
+    def get(self):
         # get page,limit & search
-
+        print(request.args.get('page'))
         page = request.args.get('page')
-        limit = request.args.get('limit')
-
-        if page is None:
-            page = 1
-
-        if limit is None:
-            limit = 10
-
+        limit = int(5)
         search = request.args.get('q')
         bucket_data = []
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
-
         bucketlist_paginate = None
+        
         if search:
             bucketlist_paginate = Bucketlists.query.filter(
-                Bucketlists.created_by == user.id, Bucketlists.name.like("%" + search + "%")).paginate(page=int(page), per_page=int(limit))
+                Bucketlists.created_by == user.id, Bucketlists.name.like(search + "%")).paginate(page=page, per_page=limit)
         else:
-
-            if kwargs.get('id') is None:
-                bucketlist_paginate = Bucketlists.query.filter(
-                    Bucketlists.created_by == user.id).paginate(page=int(page), per_page=int(limit))
-
-            else:
-                bucketlist_paginate = Bucketlists.query.filter(
-                    Bucketlists.created_by == user.id,
-                    Bucketlists.id == int(kwargs['id'])).paginate(page=int(page), per_page=int(limit))
+            bucketlist_paginate = Bucketlists.query.filter(
+                Bucketlists.created_by == user.id).paginate(page=page, per_page=limit)
 
         if bucketlist_paginate:
-            item_list = []
             for bucket in bucketlist_paginate.items:
-
-                if bucket.items:
-                    for item in bucket.items:
-                        item_list.append({"name": item.name})
-                else:
-                    item_list = []
-
                 bucket = {
                     "bucketlistId": bucket.id,
                     "name": bucket.name,
-                    "created_on": str(bucket.created_on),
-                    "items": item_list
+                    "created_on": str(bucket.created_on)
                 }
                 bucket_data.append(bucket)
-                item_list = []
 
             response = {
                 "status": "success",
-                "meta": {
-                    "total_items": len(bucketlist_paginate.items),
-                    "total_pages": bucketlist_paginate.pages
-                },
                 "bucketlist": bucket_data
             }
             return (response), 200
@@ -216,16 +195,6 @@ class Bucketlist(Resource):
 
     @jwt_required
     def put(self, id):
-
-        username = get_jwt_identity()
-        user = User.query.filter_by(username=username).first()
-        bucket = Bucketlists.query.filter_by(id=id, created_by=user.id).first()
-        if not bucket:
-            response = {
-                "status": "fail",
-                "message": "Bucketlist not found"
-            }
-            return (response), 404
         args = self.reqparse.parse_args()
         name = args["name"]
         if not name:
@@ -235,10 +204,11 @@ class Bucketlist(Resource):
             }
 
             return (response), 400
+
         if Bucketlists.query.filter_by(name=name).first():
             response = {
                 "status": "fail",
-                "message": "Bucketlist already exists"
+                "messege": "Bucketlist already exists"
             }
             return (response), 409
         bucketlist = Bucketlists.query.filter_by(id=id).first()
@@ -260,28 +230,12 @@ class Bucketlist(Resource):
     @jwt_required
     def delete(self, id):
         """To delete a bucketlist"""
-        username = get_jwt_identity()
-        user = User.query.filter_by(username=username).first()
-        bucket = Bucketlists.query.filter_by(id=id, created_by=user.id).first()
-        if not bucket:
-            response = {
-                "status": "fail",
-                "message": "Bucketlist not found"
-            }
-            return (response), 404
-        else:
-            try:
-                db.session.delete(bucket)
-                db.session.commit()
-
-                response = {
-                    "status": "success",
-                    "message": "Item deleted"
-                }
-
-                return (response), 200
-            except Exception as error:
-                return ({"error": "Bucketlist not found"}, 404)
+        bucketlist = Bucketlists.query.filter_by(id=id).first()
+        try:
+            db.session.delete(bucketlist)
+            db.session.commit()
+        except Exception as error:
+            return ({"error": "Bucketlist not found"}, 404)
 
 
 class Items(Resource):
@@ -307,7 +261,7 @@ class Items(Resource):
         if Item.query.filter_by(name=name).first():
             response = {
                 "status": "fail",
-                "message": "Item already exists"
+                "messege": "Item already exists"
             }
             return (response), 409
         username = get_jwt_identity()
@@ -317,17 +271,16 @@ class Items(Resource):
 
         response = {
             "status": "success",
-            "message": "Item created"
+            "messege": "Item created"
         }
 
-        return (response), 201
+        return (response), 200
 
     @jwt_required
     def get(self, id):
         """fetch items,get page,limit & search"""
-        limit = request.args.get('limit')
-        page = request.args.get('page')
-        print(request)
+        limit = int(request.args.get('limit'))
+        page = int(request.args.get('page'))
         search = request.args.get('q')
         item_data = []
         item = Item.query.filter_by(bucketlist_id=id).all()
@@ -355,30 +308,17 @@ class Items(Resource):
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
         bucket = Bucketlists.query.filter_by(id=id, created_by=user.id).first()
-        item = Item.query.filter_by(id=item_id, bucketlist_id=id).first()
-        if not item:
+        if not bucket:
             response = {
                 "status": "fail",
-                "message": "Item not found"
+                "message": "Bucketlist not found"
             }
             return (response), 404
-        if not name:
-            response = {
-                "status": "fail",
-                "message": "Provide an item name"
-            }
-
-            return (response), 400
+        item = Item.query.filter_by(id=item_id, bucketlist_id=id).first()
         if item:
-            # compare new name with existing one
-            if name == item.name:
-                response = {
-                    "status": "fail",
-                    "message": "Cannot update item with the same name."
-                }
-                return (response), 409
             item.name = name
             item.save()
+
             response = {
                 "status": "success",
                 "message": "Item updated",
@@ -399,27 +339,17 @@ class Items(Resource):
     @jwt_required
     def delete(self, id, item_id):
         """To delete an item"""
-        username = get_jwt_identity()
-        user = User.query.filter_by(username=username).first()
-        bucket = Bucketlists.query.filter_by(id=id, created_by=user.id).first()
         item = Item.query.filter_by(id=item_id, bucketlist_id=id).first()
-        if not item:
+        try:
+            db.session.delete(item)
+            db.session.commit()
+
             response = {
-                "status": "fail",
-                "message": "Item not found"
+                "status": "success",
+                "messege": "Item deleted"
             }
-            return (response), 404
-        else:
-            try:
-                db.session.delete(item)
-                db.session.commit()
 
-                response = {
-                    "status": "success",
-                    "message": "Item deleted"
-                }
+            return (response), 200
 
-                return (response), 200
-
-            except Exception as error:
-                return ({"error": "Item not found"}, 404)
+        except Exception as error:
+            return ({"error": "Item not found"}, 404)
