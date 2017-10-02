@@ -157,7 +157,7 @@ class Bucketlist(Resource):
             page = 1
 
         if limit is None:
-            limit = 5
+            limit = 10
 
         search = request.args.get('q')
         bucket_data = []
