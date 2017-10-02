@@ -200,6 +200,10 @@ class Bucketlist(Resource):
 
             response = {
                 "status": "success",
+                "meta": {
+                    "total_items": len(bucketlist_paginate.items),
+                    "total_pages": bucketlist_paginate.pages
+                },
                 "bucketlist": bucket_data
             }
             return (response), 200
